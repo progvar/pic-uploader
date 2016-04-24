@@ -1,12 +1,11 @@
-const request = require('request')//.defaults({ 'proxy':'http://proxy.lsy.bud.dlh.de:3128' })
+const request = require('request')
 const fs = require('fs')
-const apiURL = 'http://floogle-web-staging.herokuapp.com/sync/resource'
-const formatJSON = require('format-json')
+const apiURL = ''
 const config = require('./config/config')
 const base64 = require('node-base64-image').base64encoder
 const headers = {
-        "content-type" : "application/json",
-        "authorization" : "Bearer d07CSXHXGlV5Upk4JwWsTtmmzbdzF6HPM1SOHfKf2yD5VOklFhTck1tNFG7FfYnfDmQLtxgGBSm8Kzr5cznvG8fQD4TFjiraYAs7q1QucHdxzpqjLXb9n6MYUU13ZEFtpC8FfQM3sAWfIDW8i664niuiY0IgeZx3a6OKGPepSTkLLRVf5UXgz55XDyn5mV0T9ymDKxbubMz13QPMYcF0pTYi7nazIWpACmJt6ADt29xLpRtvEFgFaaFZbdM0NdRI"
+        'content-type' : 'application/json',
+        'authorization' : 'Bearer '
 }
 
 const folder = './cities'
@@ -21,13 +20,14 @@ fs.readdir(folder, (err, files) => {
         const path = `./cities/${file}`
         const fsOptions = {
             localFile: true,
-            string: true
+            string: true,
+            autoClose: true
         }
         const mediaJSON = {
             media : {
-                id : file.substring(0,file.indexOf('.')),
+                id : file.substring(0, file.search(/\d/)),
                 mime : 'image/jpg',
-                name : file,
+                name : `${file.substring(0, file.search(/\d/))}.jpg`,
                 payload : ''
             }
         }
@@ -44,10 +44,8 @@ fs.readdir(folder, (err, files) => {
         }
         const encodedImage = encodeImage()
 
-        encodedImage.then((base64image) => {
+        encodedImage.then(base64image => {
             mediaJSON.media.payload = base64image
-            headers['content-length'] = Buffer.byteLength(base64image)
-        }).then(() => {
             config.logger.debug(`mediaJSON content: ${mediaJSON.media.payload.slice(-10)}`)
             request({
               method: 'PUT',
@@ -55,6 +53,7 @@ fs.readdir(folder, (err, files) => {
               headers: headers,
               json: mediaJSON
             }, (err, res, body) => {
+                  config.logger.debug(res.statusCode)
                   if (!err && res.statusCode == 200) {
                       config.logger.debug(`${mediaJSON.media.name} has been uploaded!`)
                   } else {
