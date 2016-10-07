@@ -16,7 +16,7 @@ fs.readdir(folder, (err, files) => {
         process.exit(1)
     }
 
-    files.forEach((file, index) => {
+    files.forEach(file => {
         const path = `./cities/${file}`
         const fsOptions = {
             localFile: true,
@@ -52,12 +52,14 @@ fs.readdir(folder, (err, files) => {
               url: apiURL,
               headers: headers,
               json: mediaJSON
-            }, (err, res, body) => {
+            }, (err, res) => {
+                  if (err) throw err;
+
                   config.logger.debug(res.statusCode)
-                  if (!err && res.statusCode == 200) {
+                  if (res.statusCode == 200) {
                       config.logger.debug(`${mediaJSON.media.name} has been uploaded!`)
                   } else {
-                      config.logger.debug(err)
+                      config.logger.debug(`There was a problem uploading ${mediaJSON.media.name}!`)
                   }
             })
         })
